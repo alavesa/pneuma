@@ -33,6 +33,10 @@ Or open `index.html` directly in a browser that allows `file://` WebGL2.
 - Breathing phase is a single signed scalar (+1 inhale → −1 exhale) eased into shader uniforms
 - Proper `devicePixelRatio` handling and modulo-wrapped simulation space, so no hazy scaling or off-screen tunneling
 
+## See also
+
+- [rpbk/tempolux](https://github.com/rpbk/tempolux)
+
 ## License
 
 [MIT](./LICENSE)
