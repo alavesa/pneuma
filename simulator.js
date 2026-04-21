@@ -352,6 +352,7 @@
 
   function updateMouseFromEvent(e) {
     const r = canvas.getBoundingClientRect();
+    if (r.width < 1 || r.height < 1) return; // canvas not laid out yet
     const nx = (e.clientX - r.left) / r.width;
     const ny = (e.clientY - r.top) / r.height;
     mouse.x = (nx * 2 - 1) * (r.width / r.height);
@@ -745,7 +746,23 @@
   let fpsSmooth = 60;
   const fpsEl = document.getElementById('fps');
 
+  let frameErrorCount = 0;
+
   function frame() {
+    // schedule next frame FIRST so an exception below can't kill the loop
+    requestAnimationFrame(frame);
+
+    if (contextLost) return;
+
+    try {
+      renderFrame();
+    } catch (err) {
+      frameErrorCount++;
+      if (frameErrorCount < 3) console.error('[pneuma] frame error:', err);
+    }
+  }
+
+  function renderFrame() {
     const now = performance.now();
     let dt = (now - lastT) / 1000;
     lastT = now;
@@ -873,9 +890,24 @@
     gl.bindTexture(gl.TEXTURE_2D, tex);
     gl.uniform1i(U.blit.tex, 0);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
-
-    requestAnimationFrame(frame);
   }
+
+  // ---------- WebGL context loss handling ----------
+
+  let contextLost = false;
+
+  canvas.addEventListener('webglcontextlost', (e) => {
+    e.preventDefault();
+    contextLost = true;
+    console.warn('[pneuma] WebGL context lost — attempting restore');
+  });
+
+  canvas.addEventListener('webglcontextrestored', () => {
+    console.warn('[pneuma] WebGL context restored — re-seeding');
+    contextLost = false;
+    // full reload is the cheapest correct recovery: programs, buffers, textures all need recreation
+    location.reload();
+  });
 
   requestAnimationFrame(frame);
 })();
