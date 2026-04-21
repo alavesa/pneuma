@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flow — GPU Particle Simulator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="stage"></canvas>
+  <div id="cursor" class="cursor"></div>
+
+  <div class="hud">
+    <div class="title">FLOW</div>
+    <div class="sub">Audio-reactive particle field · WebGL2</div>
+  </div>
+
+  <div class="credit">
+    Inspired by <a href="https://tempolux.life/sn1e" target="_blank" rel="noopener">ŚN1E</a> by <a href="https://github.com/rpbk" target="_blank" rel="noopener">Rafał Borkowski</a>
+  </div>
+
+  <div id="breatheGuide" class="breathe-guide" aria-hidden="true">
+    <div class="breathe-ring"></div>
+    <div class="breathe-text">
+      <div id="breatheCue">Ready</div>
+      <div id="breatheCount"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="section-label">Mode</div>
+    <div class="mode-tabs">
+      <button class="mode-btn active" data-mode="off">Off</button>
+      <button class="mode-btn" data-mode="audio">Audio</button>
+      <button class="mode-btn" data-mode="breathe">Breathe</button>
+    </div>
+
+    <div id="audioPanel" class="mode-panel" hidden>
+      <div class="row buttons">
+        <button id="micBtn">Use Mic</button>
+        <button id="fileBtn">Load Track</button>
+      </div>
+      <input id="fileInput" type="file" accept="audio/*" style="display:none" />
+      <div id="trackInfo" class="track-info">No audio source</div>
+      <audio id="audioEl" crossorigin="anonymous" controls></audio>
+      <div class="row">
+        <label>Sensitivity</label>
+        <input id="sens" type="range" min="0.2" max="4" step="0.01" value="1.4" />
+        <span id="sensVal"></span>
+      </div>
+      <div class="meters">
+        <div class="meter"><div class="meter-label">B</div><div class="meter-bar"><div id="barBass" class="meter-fill bass"></div></div></div>
+        <div class="meter"><div class="meter-label">M</div><div class="meter-bar"><div id="barMid" class="meter-fill mid"></div></div></div>
+        <div class="meter"><div class="meter-label">T</div><div class="meter-bar"><div id="barTreble" class="meter-fill treble"></div></div></div>
+      </div>
+    </div>
+
+    <div id="breathePanel" class="mode-panel" hidden>
+      <div class="row">
+        <label>Pattern</label>
+        <select id="breathePattern">
+          <option value="box">Box · 4·4·4·4</option>
+          <option value="calm" selected>Calm · 4·7·8</option>
+          <option value="resonant">Resonant · 5.5·5.5</option>
+          <option value="energize">Energize · 6·2·4·2</option>
+        </select>
+        <span></span>
+      </div>
+      <div class="row">
+        <label>Cycles</label>
+        <input id="breatheCycles" type="range" min="1" max="20" step="1" value="6" />
+        <span id="breatheCyclesVal"></span>
+      </div>
+      <div class="row buttons">
+        <button id="breatheStart">Start</button>
+      </div>
+      <div class="breathe-desc" id="breatheDesc"></div>
+    </div>
+
+    <div class="section-label">Particles</div>
+    <div class="row">
+      <label>Particles</label>
+      <input id="count" type="range" min="10000" max="400000" step="10000" value="150000" />
+      <span id="countVal"></span>
+    </div>
+    <div class="row">
+      <label>Flow speed</label>
+      <input id="speed" type="range" min="0" max="3" step="0.01" value="1" />
+      <span id="speedVal"></span>
+    </div>
+    <div class="row">
+      <label>Noise scale</label>
+      <input id="noise" type="range" min="0.2" max="4" step="0.01" value="1.2" />
+      <span id="noiseVal"></span>
+    </div>
+    <div class="row">
+      <label>Trail</label>
+      <input id="trail" type="range" min="0.8" max="0.995" step="0.001" value="0.965" />
+      <span id="trailVal"></span>
+    </div>
+    <div class="row">
+      <label>Hue</label>
+      <input id="hue" type="range" min="0" max="360" step="1" value="200" />
+      <span id="hueVal"></span>
+    </div>
+    <div class="row buttons">
+      <button id="reset">Reset</button>
+      <button id="pause">Pause</button>
+    </div>
+    <div class="hint">Swipe to fling · Click-hold to push · Space to pull</div>
+    <div class="fps"><span id="fps">—</span> fps</div>
+  </div>
+
+  <script src="simulator.js"></script>
+</body>
+</html>
