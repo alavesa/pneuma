@@ -33,10 +33,6 @@ Or open `index.html` directly in a browser that allows `file://` WebGL2.
 - Breathing phase is a single signed scalar (+1 inhale → −1 exhale) eased into shader uniforms
 - Proper `devicePixelRatio` handling and modulo-wrapped simulation space, so no hazy scaling or off-screen tunneling
 
-## Credits
-
-Inspired by [ŚN1E (Światło: NOTREAL 1 ENGINE)](https://tempolux.life/sn1e) by [Rafał Borkowski](https://github.com/rpbk) — a metaphysical computational light engine that first sparked the idea. ŚN1E is MIT-licensed and open for modification.
-
 ## License
 
 [MIT](./LICENSE)
