@@ -601,11 +601,11 @@
   const breatheDesc = document.getElementById('breatheDesc');
 
   const PATTERNS = {
-    box:       { name: 'Box breathing',   steps: [['inhale', 4], ['hold', 4], ['exhale', 4], ['hold', 4]], desc: 'Equal four-count phases. Steadies focus before a high-pressure moment.' },
-    calm:      { name: '4·7·8',           steps: [['inhale', 4], ['hold', 7], ['exhale', 8]],               desc: 'Long exhale stimulates the vagus nerve and shifts you into a parasympathetic "rest and digest" state. Useful before sleep or to ease anxiety.' },
-    lengthen:  { name: 'Lengthen · 4·4·8', steps: [['inhale', 4], ['hold', 4], ['exhale', 8]],              desc: 'Researcher Nicholas Tiller\'s pick: slow in, brief hold, long pursed-lip exhale. Backed by respiratory-physiology research.' },
-    resonant:  { name: 'Resonant · 5·5',  steps: [['inhale', 5], ['exhale', 5]],                            desc: 'Six breaths per minute — the pace most studies land on for balancing heart-rate variability and reducing blood pressure.' },
-    energize:  { name: 'Energize',        steps: [['inhale', 6], ['hold', 2], ['exhale', 4], ['hold', 2]],  desc: 'Longer inhale than exhale. A gentle lift without the dizziness of hyperventilation.' },
+    box:       { name: 'Box breathing',    steps: [['inhale', 4], ['hold', 4], ['exhale', 4], ['hold', 4]], desc: 'Equal four-count phases. Steadies focus under pressure.' },
+    calm:      { name: '4·7·8',            steps: [['inhale', 4], ['hold', 7], ['exhale', 8]],              desc: 'Long exhale triggers a parasympathetic shift. Good before sleep.' },
+    lengthen:  { name: 'Lengthen · 4·4·8', steps: [['inhale', 4], ['hold', 4], ['exhale', 8]],              desc: 'Researcher-recommended. Pursed-lip exhale slows the breath out.' },
+    resonant:  { name: 'Resonant · 5·5',   steps: [['inhale', 5], ['exhale', 5]],                           desc: 'Six breaths per minute — balances heart-rate variability.' },
+    energize:  { name: 'Energize',         steps: [['inhale', 6], ['hold', 2], ['exhale', 4], ['hold', 2]], desc: 'Longer inhale for a gentle lift without hyperventilation.' },
   };
 
   let breathing = {
