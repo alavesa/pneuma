@@ -297,29 +297,46 @@
 
   seedParticles(particleCount);
 
-  // ---------- Framebuffer ----------
+  // ---------- Ping-pong framebuffers (can't read + write same texture) ----------
 
-  let fb, tex, fbW = 0, fbH = 0;
+  const fbs = [null, null];
+  const texs = [null, null];
+  let pingIdx = 0;
+  let fbW = 0, fbH = 0;
 
   function createFBO(w, h) {
-    if (tex) gl.deleteTexture(tex);
-    if (fb) gl.deleteFramebuffer(fb);
-    tex = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-    const internal = ext ? gl.RGBA16F : gl.RGBA;
-    const type = ext ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE;
-    gl.texImage2D(gl.TEXTURE_2D, 0, internal, w, h, 0, gl.RGBA, type, null);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    for (let i = 0; i < 2; i++) {
+      if (texs[i]) gl.deleteTexture(texs[i]);
+      if (fbs[i]) gl.deleteFramebuffer(fbs[i]);
+      const t = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, t);
+      const internal = ext ? gl.RGBA16F : gl.RGBA;
+      const type = ext ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE;
+      gl.texImage2D(gl.TEXTURE_2D, 0, internal, w, h, 0, gl.RGBA, type, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-    fb = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+      const f = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, f);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+
+      texs[i] = t;
+      fbs[i] = f;
+    }
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     fbW = w;
     fbH = h;
+  }
+
+  function clearBothFBOs() {
+    for (let i = 0; i < 2; i++) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fbs[i]);
+      gl.clearColor(0, 0, 0, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
   function resize() {
@@ -330,10 +347,7 @@
       canvas.width = w;
       canvas.height = h;
       createFBO(w, h);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-      gl.clearColor(0, 0, 0, 1);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      clearBothFBOs();
     }
   }
 
@@ -431,10 +445,7 @@
 
   document.getElementById('reset').addEventListener('click', () => {
     seedParticles(particleCount);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-    gl.clearColor(0, 0, 0, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    clearBothFBOs();
   });
 
   const pauseBtn = document.getElementById('pause');
@@ -852,21 +863,25 @@
       readIdx = writeIdx;
     }
 
-    // fade previous frame
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    // ping-pong: read from srcTex, write to dstFbo (avoids sampling same texture we render to)
+    const srcTex = texs[pingIdx];
+    const dstFbo = fbs[1 - pingIdx];
+    const dstTex = texs[1 - pingIdx];
+
+    // fade previous frame into destination
+    gl.bindFramebuffer(gl.FRAMEBUFFER, dstFbo);
     gl.viewport(0, 0, fbW, fbH);
     gl.disable(gl.BLEND);
     gl.useProgram(fadeProg);
     gl.bindVertexArray(quadVAO);
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.bindTexture(gl.TEXTURE_2D, srcTex);
     gl.uniform1i(U.fade.tex, 0);
-    // longer trails when breathing, for smoother motion
     const trailBoost = state.mode === 'breathe' ? 0.01 : 0;
     gl.uniform1f(U.fade.fade, Math.min(0.998, state.trail + trailBoost));
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
-    // draw particles additively
+    // draw particles additively into the destination FBO
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE);
     gl.useProgram(drawProg);
@@ -879,16 +894,19 @@
     gl.drawArrays(gl.POINTS, 0, particleCount);
     gl.bindVertexArray(null);
 
-    // blit to screen
+    // blit destination to screen
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.disable(gl.BLEND);
     gl.useProgram(blitProg);
     gl.bindVertexArray(quadVAO);
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.bindTexture(gl.TEXTURE_2D, dstTex);
     gl.uniform1i(U.blit.tex, 0);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    // swap for next frame
+    pingIdx = 1 - pingIdx;
   }
 
   // ---------- WebGL context loss handling ----------
